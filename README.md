@@ -21,7 +21,13 @@ docker images
 ```
 
 ```
-docker run --publish 3000:3000 {image_repo}
+docker run -it -p 3000:3000 026424947954.dkr.ecr.us-east-1.amazonaws.com/blog-terraform-docker:latest
+```
+
+### Remove stopped containers
+
+```
+docker container prune
 ```
 
 ### Pushing the latest image to ECR
