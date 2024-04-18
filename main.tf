@@ -12,9 +12,13 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# ECR 
+# Create ECR repository
 resource "aws_ecr_repository" "blog-terraform-docker" {
   name = "blog-terraform-docker"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 
   tags = {
     project = "blog-terraform-docker"
