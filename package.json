@@ -6,8 +6,9 @@
   "scripts": {
     "build:client": "webpack --config=webpack.client.config.js",
     "build:server": "webpack --config=webpack.server.config.js",
+    "build": "npm run build:client && npm run build:server",
     "start": "node dist/server/index.js",
-    "dev": "nodemon --exec \"npm run build:client && npm run build:server && npm run start\" --watch src -e ts,tsx"
+    "dev": "nodemon --exec \"npm run build && npm run start\" --watch src -e ts,tsx"
   },
   "author": "suhanw@gmail.com",
   "license": "ISC",
