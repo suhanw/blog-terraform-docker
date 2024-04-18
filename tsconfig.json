@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./build",
+    "jsx": "react",
+    "esModuleInterop": true,
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"],
+  "exclude": ["./build"]
+}
