@@ -1,9 +1,10 @@
-const path = require("path");
-const express = require("express");
-const app = express();
-const port = 3000;
+import path from "path";
+import express from "express";
 
-app.use("/build", express.static(path.join(process.cwd(), "./build")));
+const PORT = 3000;
+const app = express();
+
+app.use("/build", express.static(path.join(process.cwd(), "./dist/client")));
 
 app.get("/", (req, res) => {
   res.send(`
@@ -20,6 +21,6 @@ app.get("/", (req, res) => {
   `);
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
