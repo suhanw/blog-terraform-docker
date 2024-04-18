@@ -16,6 +16,7 @@
 **/.vscode
 **/.next
 **/.cache
+**/.terraform
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
