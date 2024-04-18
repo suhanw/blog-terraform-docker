@@ -12,3 +12,11 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# ECR 
+resource "aws_ecr_repository" "blog-terraform-docker" {
+  name = "blog-terraform-docker"
+
+  tags = {
+    project = "blog-terraform-docker"
+  }
+}

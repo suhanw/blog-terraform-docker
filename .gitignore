@@ -1,3 +1,5 @@
 node_modules
 dist
 .terraform
+terraform.tfstate*
+.env
