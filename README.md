@@ -52,4 +52,4 @@ docker push 026424947954.dkr.ecr.us-east-1.amazonaws.com/blog-terraform-docker:l
 
 ## Terraform notes
 
-Include IAM user credentials in `.env`. Run `source .env` before `terraform apply`.
+Include IAM user credentials `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `.env`. Run `source .env` before `terraform apply`.
