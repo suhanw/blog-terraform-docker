@@ -1,17 +1,15 @@
 const path = require("path");
 const { merge } = require("webpack-merge");
 const nodeExternals = require("webpack-node-externals");
-const sharedConfig = require("./webpack.shared.config.js");
-
-console.log("using webpack.server.config.js");
+const sharedConfig = require("../webpack.base.config.js");
 
 module.exports = merge(sharedConfig, {
   target: "node",
 
-  entry: "./src/server/index.ts",
+  entry: path.join(process.cwd(), "server/src/index.ts"),
 
   output: {
-    path: path.join(process.cwd(), "./dist/server"),
+    path: path.join(process.cwd(), "dist/server"),
     filename: "index.js",
   },
 
