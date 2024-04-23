@@ -7,6 +7,7 @@ const settings = createBuildSettings({
   outfile: "dist/client/bundle.js",
   tsconfigPath: "client/tsconfig.json",
   tsx: true,
+  target: ["chrome58", "firefox57", "safari11"],
 });
 
 console.log({ clientSettings: settings });
