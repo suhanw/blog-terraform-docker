@@ -6,6 +6,6 @@ function App({ message }: { message: string }) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  const root = createRoot(document.getElementById("root")!);
+  const root = createRoot(document.getElementById("root"));
   root.render(<App message="Hello World!!" />);
 });
