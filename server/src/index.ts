@@ -4,7 +4,7 @@ import express from "express";
 const PORT = 3000;
 const app = express();
 
-app.use("/build", express.static(path.join(process.cwd(), "./dist/client")));
+app.use("/public", express.static(path.join(process.cwd(), "./dist/client")));
 
 app.get("/", (req, res) => {
   res.send(`
@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
       </head>
       <body>
         <div id="root"></div>
-        <script src="/build/bundle.js"></script>
+        <script src="/public/bundle.js"></script>
       </body>
     </html>
   `);
