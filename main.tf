@@ -57,6 +57,7 @@ resource "aws_ecr_lifecycle_policy" "blog_terraform_docker" {
 }
 
 # Build Docker image and push to ECR repository
+# https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
 resource "terraform_data" "docker_build" {
   depends_on = [aws_ecr_repository.blog_terraform_docker]
 
