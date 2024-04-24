@@ -67,7 +67,8 @@ resource "terraform_data" "docker_build" {
   provisioner "local-exec" {
     command = <<EOF
         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com
-        docker build -t "${aws_ecr_repository.blog_terraform_docker.repository_url}:latest" .
+        # https://stackoverflow.com/a/68004485
+        docker build --platform linux/amd64 -t "${aws_ecr_repository.blog_terraform_docker.repository_url}:latest" .
         docker push "${aws_ecr_repository.blog_terraform_docker.repository_url}:latest"
     EOF
   }
