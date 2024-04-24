@@ -105,7 +105,7 @@ resource "aws_iam_role_policy_attachment" "blog_terraform_docker_ec2_ecr_policy"
 
 # Create an EC2 instance profile which will house the role.
 resource "aws_iam_instance_profile" "blog_terraform_docker_ec2_instance_profile" {
-  name = "blog-terraform-docker-ec2-instanceProfile"
+  name = "blog-terraform-docker-ec2-instance-profile"
   role = aws_iam_role.blog_terraform_docker_ec2_role.name
 
   tags = {
@@ -126,7 +126,7 @@ module "dev_ssh_sg" {
   description = "Security group for SSH access"
   vpc_id      = data.aws_vpc.default.id
 
-  ingress_cidr_blocks = ["108.53.23.213/32"]
+  ingress_cidr_blocks = ["108.53.23.213/32", "38.122.226.210/32"]
   ingress_rules       = ["ssh-tcp"]
 
   tags = {
@@ -161,7 +161,6 @@ resource "aws_instance" "blog_terraform_docker_ec2_instance" {
   # Amazon Linux 2023 AMI 2023.4.20240416.0 x86_64 HVM kernel-6.1
   # https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#ImageDetails:imageId=ami-04e5276ebb8451442
   ami           = "ami-04e5276ebb8451442"
-
   instance_type = "t3.micro"
   key_name      = "blog-terraform-docker"
   vpc_security_group_ids = [
@@ -172,23 +171,32 @@ resource "aws_instance" "blog_terraform_docker_ec2_instance" {
 
   # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html
   user_data = <<-EOF
-                            #!/bin/bash
-                            sudo yum update -y
-                            sudo yum install -y docker
-                            sudo service docker start
-                            sudo usermod -a -G docker $(whoami)
-                            docker ps
+    #!/bin/bash
+    sudo yum update -y
+    sudo yum install -y docker
+    sudo service docker start
+    sudo usermod -a -G docker $(whoami)
+    docker ps
 
-                            # Login to ECR
-                            # https://stackoverflow.com/a/53098960
-                            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com
+    # https://github.com/awslabs/amazon-ecr-credential-helper?tab=readme-ov-file#amazon-linux-2023-al2023
+    sudo dnf install -y amazon-ecr-credential-helper
 
-                            # Pull the image from ECR and run a container with it.
-                            docker pull ${aws_ecr_repository.blog_terraform_docker.repository_url}:latest
-                            docker run -d -p 80:3000 ${aws_ecr_repository.blog_terraform_docker.repository_url}:latest
+    # https://github.com/awslabs/amazon-ecr-credential-helper?tab=readme-ov-file#docker
+    # Check if ~/.docker/config.json exists
+    if [ ! -f ~/.docker/config.json ]; then
+      # If not, create the file
+      mkdir -p ~/.docker
+      touch ~/.docker/config.json
+    fi
+    # Update the file with the content { "credsStore": "ecr-login" }
+    echo '{ "credsStore": "ecr-login" }' > ~/.docker/config.json
 
-                            # https://serverfault.com/questions/228481/where-is-log-output-from-cloud-init-stored
-                          EOF
+    # Pull the image from ECR and run a container with it.
+    docker pull ${aws_ecr_repository.blog_terraform_docker.repository_url}:latest
+    docker run -d -p 80:3000 ${aws_ecr_repository.blog_terraform_docker.repository_url}:latest
+
+    # https://serverfault.com/questions/228481/where-is-log-output-from-cloud-init-stored
+  EOF
 
   tags = {
     project = "blog-terraform-docker"
@@ -197,4 +205,8 @@ resource "aws_instance" "blog_terraform_docker_ec2_instance" {
 
 output "public_ip" {
   value = aws_instance.blog_terraform_docker_ec2_instance.public_ip
+}
+
+output "public_dns" {
+  value = aws_instance.blog_terraform_docker_ec2_instance.public_dns
 }
