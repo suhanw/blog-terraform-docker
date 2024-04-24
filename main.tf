@@ -7,16 +7,31 @@ terraform {
   }
 }
 
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
+}
+
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
 # Get the current AWS account details
 data "aws_caller_identity" "current" {}
 
-output "account_id" {
-  value = data.aws_caller_identity.current.account_id
+# Get the default VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+locals {
+  account_id     = data.aws_caller_identity.current.account_id
+  default_vpc_id = data.aws_vpc.default.id
+  common_tags = {
+    project = "blog-terraform-docker"
+  }
 }
 
 # Create ECR repository
@@ -27,9 +42,7 @@ resource "aws_ecr_repository" "blog_terraform_docker" {
     scan_on_push = true
   }
 
-  tags = {
-    project = "blog-terraform-docker"
-  }
+  tags = local.common_tags
 }
 
 # Keep only one untagged image that precedes the latest image
@@ -66,7 +79,8 @@ resource "terraform_data" "docker_build" {
 
   provisioner "local-exec" {
     command = <<EOF
-        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com
+        aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com
+
         # https://stackoverflow.com/a/68004485
         docker build --platform linux/amd64 -t "${aws_ecr_repository.blog_terraform_docker.repository_url}:latest" .
         docker push "${aws_ecr_repository.blog_terraform_docker.repository_url}:latest"
@@ -108,13 +122,7 @@ resource "aws_iam_instance_profile" "blog_terraform_docker_ec2_instance_profile"
   name = "blog-terraform-docker-ec2-instance-profile"
   role = aws_iam_role.blog_terraform_docker_ec2_role.name
 
-  tags = {
-    project = "blog-terraform-docker"
-  }
-}
-
-data "aws_vpc" "default" {
-  default = true
+  tags = local.common_tags
 }
 
 # Create a Security Group to allow SSH access to the instance.
@@ -124,14 +132,12 @@ module "dev_ssh_sg" {
 
   name        = "dev_ssh_sg"
   description = "Security group for SSH access"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = local.default_vpc_id
 
   ingress_cidr_blocks = ["108.53.23.213/32", "38.122.226.210/32"]
   ingress_rules       = ["ssh-tcp"]
 
-  tags = {
-    project = "blog-terraform-docker"
-  }
+  tags = local.common_tags
 }
 
 # Create a Security Group to allow HTTP access to the instance.
@@ -141,15 +147,13 @@ module "ec2_sg" {
 
   name        = "ec2_sg"
   description = "Security group for ec2_sg"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = local.default_vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
   ingress_rules       = ["http-80-tcp"]
   egress_rules        = ["all-all"]
 
-  tags = {
-    project = "blog-terraform-docker"
-  }
+  tags = local.common_tags
 }
 
 resource "aws_instance" "blog_terraform_docker_ec2_instance" {
@@ -162,7 +166,7 @@ resource "aws_instance" "blog_terraform_docker_ec2_instance" {
   # https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#ImageDetails:imageId=ami-04e5276ebb8451442
   ami           = "ami-04e5276ebb8451442"
   instance_type = "t3.micro"
-  key_name      = "blog-terraform-docker"
+  key_name      = "blog-terraform-docker" # https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#KeyPairs:
   vpc_security_group_ids = [
     module.ec2_sg.security_group_id,
     module.dev_ssh_sg.security_group_id
@@ -198,9 +202,11 @@ resource "aws_instance" "blog_terraform_docker_ec2_instance" {
     # https://serverfault.com/questions/228481/where-is-log-output-from-cloud-init-stored
   EOF
 
-  tags = {
-    project = "blog-terraform-docker"
-  }
+  tags = local.common_tags
+}
+
+output "account_id" {
+  value = local.account_id
 }
 
 output "public_ip" {
