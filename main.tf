@@ -105,9 +105,7 @@ resource "aws_iam_role" "blog_terraform_docker_ec2_role" {
     ],
   })
 
-  tags = {
-    project = "blog-terraform-docker"
-  }
+  tags = local.common_tags
 }
 
 # Policy Attachment to allow EC2 instance to communicate with ECR.
